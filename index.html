@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FC26 Career Universe Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        pitch: {
+                            DEFAULT: '#0f172a',
+                            card: '#1e293b',
+                            accent: '#10b981',
+                            gold: '#f59e0b',
+                            danger: '#ef4444'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* カスタムスタイル */
+        .tab-btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #94a3b8;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: #f8fafc; }
+        .active-tab {
+            color: #10b981 !important;
+            border-bottom-color: #10b981 !important;
+        }
+        .active-mobile-tab { color: #10b981 !important; }
+        /* スクロールバー非表示 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased pb-20 md:pb-0">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-500 p-2 rounded-lg text-slate-950 font-black tracking-tighter text-lg">FC26</div>
+            <div>
+                <h1 class="font-bold text-base leading-tight">Career Universe Manager</h1>
+                <p id="header-club-info" class="text-xs text-slate-400">Valencia CF</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="app.openModal('modal-settings')" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- Top Status Banner -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center space-x-3">
+                <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><i data-lucide="trophy" class="w-5 h-5"></i></div>
+                <div>
+                    <div class="text-xs text-slate-400">リーグ順位</div>
+                    <div id="stat-rank" class="font-bold text-lg">3位</div>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center space-x-3">
+                <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><i data-lucide="activity" class="w-5 h-5"></i></div>
+                <div>
+                    <div class="text-xs text-slate-400">通算戦績</div>
+                    <div id="stat-record" class="font-bold text-lg">4勝 1分 1敗</div>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center space-x-3">
+                <div class="p-2 bg-amber-500/10 text-amber-400 rounded-lg"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div>
+                <div>
+                    <div class="text-xs text-slate-400">要対応（不満）</div>
+                    <div id="stat-alerts" class="font-bold text-lg text-amber-400">1件</div>
+                </div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center space-x-3">
+                <div class="p-2 bg-purple-500/10 text-purple-400 rounded-lg"><i data-lucide="users" class="w-5 h-5"></i></div>
+                <div>
+                    <div class="text-xs text-slate-400">登録選手数</div>
+                    <div id="stat-squad" class="font-bold text-lg">24名</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-slate-800 overflow-x-auto no-scrollbar space-x-1">
+            <button onclick="app.switchTab('dashboard')" id="tab-dashboard" class="tab-btn active-tab">ダッシュボード</button>
+            <button onclick="app.switchTab('universe')" id="tab-universe" class="tab-btn">Career Universe</button>
+            <button onclick="app.switchTab('sddesk')" id="tab-sddesk" class="tab-btn">SDデスク</button>
+            <button onclick="app.switchTab('match')" id="tab-match" class="tab-btn">試合記録/OCR</button>
+            <button onclick="app.switchTab('squad')" id="tab-squad" class="tab-btn">選手・スカッド</button>
+            <button onclick="app.switchTab('press')" id="tab-press" class="tab-btn">会見・メディア</button>
+        </div>
+
+        <!-- Tab Content: Dashboard -->
+        <section id="view-dashboard" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold flex items-center gap-2">
+                                <i data-lucide="building-2" class="w-5 h-5 text-emerald-400"></i> 最新 SD内部報告 (スポーツディレクター)
+                            </h2>
+                            <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full">社外秘</span>
+                        </div>
+                        <div id="dashboard-sd-briefing" class="text-sm text-slate-300 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                            「直近の試合勝利によりチーム全体の士気は高まっていますが、一部控え主力から出場機会に関する面談要請が届いています。過密日程に入る前にローテーションの明示を推奨します。」
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="heart-pulse" class="w-5 h-5 text-amber-400"></i> 要注意・不満を抱える選手
+                        </h2>
+                        <div id="dashboard-discontent-list" class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+                                <div>
+                                    <div class="font-bold text-sm">Hugo Duro (FW)</div>
+                                    <div class="text-xs text-slate-400">理由: 直近3試合でベンチスタート</div>
+                                </div>
+                                <button onclick="app.openTalkModal('Hugo Duro')" class="px-3 py-1.5 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 text-xs font-bold rounded-lg transition border border-amber-500/30">
+                                    面談を開始
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="newspaper" class="w-5 h-5 text-blue-400"></i> 最新メディア報道
+                        </h2>
+                        <div class="space-y-3 text-sm">
+                            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                                <p class="text-xs text-blue-400 font-bold mb-1">MARCA</p>
+                                <p class="text-slate-300">「バレンシア、好調維持の鍵は戦術の柔軟性にあるか」</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab Content: Career Universe -->
+        <section id="view-universe" class="tab-content hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-1">Career Universe Status</h2>
+                <p class="text-xs text-slate-400 mb-6">クラブ内外の人間関係・メンタルコンディション</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-950 border border-red-500/30 rounded-xl p-4">
+                        <h3 class="font-bold text-red-400 border-b border-red-500/20 pb-2 mb-3">🔴 要対応</h3>
+                        <div class="text-sm text-slate-300">・Hugo Duro (出場機会への不安)</div>
+                    </div>
+                    <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-4">
+                        <h3 class="font-bold text-amber-400 border-b border-amber-500/20 pb-2 mb-3">🟡 注意</h3>
+                        <div class="text-sm text-slate-300">・Pepelu (疲労蓄積の兆候)</div>
+                    </div>
+                    <div class="bg-slate-950 border border-emerald-500/30 rounded-xl p-4">
+                        <h3 class="font-bold text-emerald-400 border-b border-emerald-500/20 pb-2 mb-3">🟢 良好</h3>
+                        <div class="text-sm text-slate-300">・Javi Guerra (チームへの高い満足感)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab Content: SD Desk -->
+        <section id="view-sddesk" class="tab-content hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-2">SD執務室</h2>
+                <p class="text-sm text-slate-400">フロント・代理人からの最新連絡事項が届いています。</p>
+            </div>
+        </section>
+
+        <!-- Tab Content: Match Record -->
+        <section id="view-match" class="tab-content hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-4">試合結果の入力</h2>
+                <form onsubmit="app.saveMatchRecord(event)" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">対戦相手</label>
+                            <input type="text" required placeholder="例: Real Betis" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">スコア (自チーム - 相手)</label>
+                            <input type="text" required placeholder="2 - 1" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-xl transition">
+                        試合記録を保存
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tab Content: Squad -->
+        <section id="view-squad" class="tab-content hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-4">スカッド一覧</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">名前</th>
+                                <th class="p-3">Pos</th>
+                                <th class="p-3">OVR</th>
+                                <th class="p-3">状態</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr>
+                                <td class="p-3 font-bold">Giorgi Mamardashvili</td>
+                                <td class="p-3">GK</td>
+                                <td class="p-3">83</td>
+                                <td class="p-3 text-emerald-400">良好</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold">Pepelu</td>
+                                <td class="p-3">CDM</td>
+                                <td class="p-3">80</td>
+                                <td class="p-3 text-emerald-400">良好</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold">Hugo Duro</td>
+                                <td class="p-3">ST</td>
+                                <td class="p-3">78</td>
+                                <td class="p-3 text-amber-400">要面談</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab Content: Press -->
+        <section id="view-press" class="tab-content hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-xl font-bold mb-4">記者会見</h2>
+                <p class="text-sm text-slate-400">次節に向けた監督コメントを入力できます。</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: Player Talk -->
+    <div id="modal-talk" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 id="talk-player-name" class="font-bold text-lg">選手面談</h3>
+                <button onclick="app.closeModal('modal-talk')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="talk-history" class="h-48 overflow-y-auto bg-slate-950 p-4 rounded-xl text-sm border border-slate-800 space-y-3">
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                    <p class="text-xs text-amber-400 font-bold mb-1">Hugo Duro</p>
+                    <p class="text-slate-300">「ボス、最近スタメンから外れていますが、何か改善すべき点がありますか？」</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="talk-input" placeholder="監督の返答を入力..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm">
+                <button onclick="app.sendTalk()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-bold text-sm rounded-xl">送信</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Settings -->
+    <div id="modal-settings" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-lg">設定</h3>
+                <button onclick="app.closeModal('modal-settings')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-sm text-slate-400">アプリのバージョン: v1.0.0 (Standalone)</p>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 z-40 flex justify-around py-2 px-1 text-[10px] text-slate-400">
+        <button onclick="app.switchTab('dashboard')" class="flex flex-col items-center gap-1">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dash
+        </button>
+        <button onclick="app.switchTab('universe')" class="flex flex-col items-center gap-1">
+            <i data-lucide="globe" class="w-5 h-5"></i> Universe
+        </button>
+        <button onclick="app.switchTab('match')" class="flex flex-col items-center gap-1">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i> 記録
+        </button>
+        <button onclick="app.switchTab('squad')" class="flex flex-col items-center gap-1">
+            <i data-lucide="users" class="w-5 h-5"></i> 選手
+        </button>
+    </nav>
+
+    <!-- JS (すべての処理を完結内包) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+
+        const app = {
+            switchTab: function(tabId) {
+                // すべてのビューを非表示
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                
+                // 対象ビューを表示
+                const target = document.getElementById('view-' + tabId);
+                if (target) target.classList.remove('hidden');
+
+                // タブボタンの見た目を更新
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+                const activeBtn = document.getElementById('tab-' + tabId);
+                if (activeBtn) activeBtn.classList.add('active-tab');
+            },
+            openModal: function(modalId) {
+                document.getElementById(modalId).classList.remove('hidden');
+            },
+            closeModal: function(modalId) {
+                document.getElementById(modalId).classList.add('hidden');
+            },
+            openTalkModal: function(playerName) {
+                document.getElementById('talk-player-name').innerText = playerName + ' との面談';
+                this.openModal('modal-talk');
+            },
+            sendTalk: function() {
+                const input = document.getElementById('talk-input');
+                const history = document.getElementById('talk-history');
+                if (!input.value.trim()) return;
+
+                const userMsg = document.createElement('div');
+                userMsg.className = 'bg-emerald-950/50 p-3 rounded-lg border border-emerald-800/50 text-right ml-8';
+                userMsg.innerHTML = `<p class="text-xs text-emerald-400 font-bold mb-1">監督</p><p class="text-slate-300">${input.value}</p>`;
+                history.appendChild(userMsg);
+
+                input.value = '';
+                history.scrollTop = history.scrollHeight;
+
+                setTimeout(() => {
+                    const replyMsg = document.createElement('div');
+                    replyMsg.className = 'bg-slate-900 p-3 rounded-lg border border-slate-800 mr-8';
+                    replyMsg.innerHTML = `<p class="text-xs text-amber-400 font-bold mb-1">Hugo Duro</p><p class="text-slate-300">「分かりました、ボス。次の機会で結果を出せるよう準備しておきます。」</p>`;
+                    history.appendChild(replyMsg);
+                    history.scrollTop = history.scrollHeight;
+                }, 800);
+            },
+            saveMatchRecord: function(e) {
+                e.preventDefault();
+                alert('試合結果を記録しました！');
+            }
+        };
+    </script>
+</body>
+</html>
